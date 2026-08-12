@@ -628,6 +628,7 @@
       const DEFAULT_HEADER_TITLE = 'みんなに共有';
       let shouldSuppressActionOnShare = false;
       let shareEnvironmentReady = false;
+      let lastBuiltShareMessages = null;
 
       function getThemePalette(theme) {
         switch (theme) {
@@ -1016,7 +1017,7 @@
           headerContents.push({
             type: 'text',
             text: state.date,
-            color: '#FFFFFFD1',
+            color: '#FFFFFF',
             size: 'xs',
             margin: 'sm',
             wrap: true
@@ -1057,7 +1058,6 @@
           bodyContents.push({
             type: 'button',
             style: 'primary',
-            height: 'sm',
             color: themeStartColor(state.theme),
             action: {
               type: 'uri',
@@ -1067,13 +1067,12 @@
           });
         }
 
-        return [
+        const messages = [
           {
             type: 'flex',
             altText: buildAltText(state),
             contents: {
               type: 'bubble',
-              size: 'mega',
               header: {
                 type: 'box',
                 layout: 'vertical',
@@ -1090,6 +1089,10 @@
             }
           }
         ];
+
+        lastBuiltShareMessages = messages;
+
+        return messages;
       }
 
       function themeStartColor(theme) {
@@ -1166,8 +1169,10 @@
 
         try {
           setStatus('共有先を開いています…', false);
+          const messages = buildShareMessages(getEditorState());
+          console.log('FlexShare messages', JSON.stringify(messages, null, 2));
           const result = await liff.shareTargetPicker(
-            buildShareMessages(getEditorState()),
+            messages,
             { isMultiple: true }
           );
 
@@ -1185,6 +1190,7 @@
           setStatus('共有はキャンセルされました。', false);
         } catch (error) {
           setStatus('共有に失敗しました。時間をおいて再度お試しください。', true);
+          console.error('FlexShare last messages', lastBuiltShareMessages);
           console.error(error);
         }
       }
